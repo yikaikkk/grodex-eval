@@ -46,6 +46,8 @@ def render_markdown(report: dict[str, Any], findings: list[dict[str, Any]], top_
     memory = report.get("memory", {})
     reliability = report.get("reliability", {})
     capabilities = report.get("capabilities", {})
+    security = report.get("security", {})
+    integrity = report.get("integrity", {})
     cost = report.get("cost", {})
 
     out: list[str] = []
@@ -208,6 +210,35 @@ def render_markdown(report: dict[str, Any], findings: list[dict[str, Any]], top_
         ))
         out.append("")
 
+    # -- security ----------------------------------------------------------
+    out.append("## Security / authorization")
+    out.append("")
+    out.append(_table(
+        ["metric", "value"],
+        [
+            ("approval prompts", human_int(security.get("approval_prompts"))),
+            ("resolved decisions", human_int(security.get("resolved"))),
+            ("approved (single call)", human_int(security.get("approved_single"))),
+            ("approved (whole session)", human_int(security.get("approved_session"))),
+            ("session-wide share of approvals", _pct(security.get("session_grant_share"))),
+            ("sessions holding a session grant", human_int(security.get("sessions_with_session_grants"))),
+            ("rejected / expired", f"{human_int(security.get('rejected'))} / {human_int(security.get('expired'))}"),
+            ("rejection rate", _pct(security.get("rejection_rate"))),
+            ("auto-allowed executions", human_int(security.get("auto_allowed_executions"))),
+            ("executions per human decision", human_float(security.get("approval_amplification"))),
+            ("leases issued / consumed", f"{human_int(security.get('leases_issued'))} / {human_int(security.get('leases_consumed'))}"),
+            ("stale capability rejections", human_int(security.get("stale_capability_rejections"))),
+            ("executions with no approval stamp", human_int(security.get("ungated_executions"))),
+            ("...of which guarded tools", human_int(security.get("guarded_ungated_executions"))),
+        ],
+    ))
+    out.append("")
+    if security.get("decision_types"):
+        out.append("Decision types: " + ", ".join(
+            f"`{k}`={v}" for k, v in security["decision_types"].items()
+        ))
+        out.append("")
+
     # -- context -----------------------------------------------------------
     out.append("## Context & compaction")
     out.append("")
@@ -312,6 +343,24 @@ def render_markdown(report: dict[str, Any], findings: list[dict[str, Any]], top_
         out.append(cost.get("note", "no price table supplied"))
     out.append("")
 
+    # -- integrity ---------------------------------------------------------
+    # Unwindowed by design: see metrics.integrity. A malformed row is a
+    # property of the database, not of the reporting window.
+    out.append("## Projection integrity")
+    out.append("")
+    integrity_rows = [
+        (
+            f"{c['table']}.{c['column']} IS NULL",
+            "column absent" if c["nulls"] is None else human_int(c["nulls"]),
+        )
+        for c in integrity.get("null_checks", [])
+    ]
+    integrity_rows.append(
+        ("model_attempts with no matching turn", human_int(integrity.get("orphan_model_attempts")))
+    )
+    out.append(_table(["check", "rows"], integrity_rows))
+    out.append("")
+
     # -- appendix ----------------------------------------------------------
     out.append("## Appendix: projection coverage")
     out.append("")
@@ -340,6 +389,7 @@ def render_console(report: dict[str, Any], findings: list[dict[str, Any]]) -> st
     turns = report.get("turn_health", {})
     tools = report.get("tool_usage", {})
     models = report.get("model_usage", {}).get("totals", {})
+    security = report.get("security", {})
     lines = [
         f"window: {report.get('meta', {}).get('window')}",
         f"sessions={overview.get('sessions')} turns={overview.get('turns')} events={overview.get('events')}",
@@ -350,6 +400,8 @@ def render_console(report: dict[str, Any], findings: list[dict[str, Any]]) -> st
         f"cache_hit={_pct(models.get('cache_hit_rate'))}",
         f"tool calls={tools.get('calls')} error_rate={_pct(tools.get('error_rate'))} "
         f"approval_tax={_pct(tools.get('approval_tax'))}",
+        f"security: session_wide_approvals={_pct(security.get('session_grant_share'))} "
+        f"executions_per_decision={human_float(security.get('approval_amplification'))}",
         "",
         f"findings: {len(findings)}",
     ]

@@ -30,6 +30,14 @@ numbers you need before you start changing anything:
   (share of the tool lifecycle spent waiting for a human).
 * **Approvals** — request/resolve/reject/expire/narrow counts and which tools
   demand the most attention.
+* **Security / authorization** — how much one human "yes" buys: the share of
+  approvals granted session-wide (rather than per call), how many executions a
+  single decision auto-allows, and guarded tools that ran with no approval
+  record at all. A denial count does not distinguish a per-call gate from a
+  prompt-once-then-auto-allow gate.
+* **Projection integrity** — NULLs in columns the telemetry readers declare
+  non-nullable, plus orphan rows. A skewed metric is still a number; these
+  rows make the reader raise instead.
 * **Context** — prompt size distribution and compaction frequency.
 * **Memory** — retrieval latency, empty-result rate, per-router breakdown.
 * **Reliability** — indeterminate / stuck / uncommitted tool executions and
@@ -44,6 +52,10 @@ Two design rules worth keeping:
    and "zero percent" are different findings.
 2. No costs are invented. Token counts are always reported; money is only
    computed when you supply a price table via `--prices`.
+3. The projection-integrity checks are deliberately **unwindowed**. A
+   malformed row is a property of the database, not of the reporting window;
+   scoping them to a window would hide exactly the rows written before it —
+   which are the ones already breaking the reader.
 
 ## Usage
 
@@ -155,3 +167,9 @@ reach this — `grodex-cli/src/runtime.rs` resolves config over env with
   directional and re-run after changes with the same window.
 * `subagent_runs` and `mcp_lifecycle` are empty in some databases. That is a
   finding in itself (see the projection-gap rule), not a tool failure.
+* `error_class` values are Grodex's own labels, from
+  `SamplingError::kind_label()` (`grodex-sampler/src/error.rs`). `api_error` is
+  the catch-all for any provider response **below 500**; in this database
+  every one of them is an HTTP 400, meaning the request Grodex built was
+  malformed. A 5xx is labelled `server_error` and is the only class where a
+  retry can help — `api_error` is deterministic, so the same turn dies again.

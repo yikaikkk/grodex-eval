@@ -36,11 +36,11 @@ CREATE TABLE tool_executions (
   session_id TEXT, call_id TEXT, turn_id TEXT, tool_name TEXT, status TEXT,
   is_error INTEGER, exit_code INTEGER, duration_ms INTEGER, approval_wait_ms INTEGER,
   output_truncated INTEGER, prepared_at TEXT, started_at TEXT, finished_at TEXT,
-  committed_at TEXT, PRIMARY KEY (session_id, call_id)
+  committed_at TEXT, approved_at TEXT, PRIMARY KEY (session_id, call_id)
 );
 CREATE TABLE security_decisions (
   decision_id TEXT PRIMARY KEY, decision_type TEXT, decision TEXT, tool_name TEXT,
-  occurred_at TEXT
+  occurred_at TEXT, session_id TEXT
 );
 CREATE TABLE prompt_builds (
   prompt_id TEXT PRIMARY KEY, session_id TEXT, turn_id TEXT,
@@ -107,23 +107,29 @@ def build_db(path: Path) -> None:
     # Tools. `duration_ms` spans prepared -> finished, so it CONTAINS the
     # approval wait: c1 waited 900ms then ran 100ms, c2 waited 100ms then ran
     # 400ms. Lifecycle = 1000+500+50 = 1550, wait = 1000, pure exec = 550.
+    # `approved_at` is the gate's stamp. c3 has none: an `exec` (a guarded
+    # tool) that ran with no recorded approval decision.
     tools = [
-        ("s1", "c1", "t0", "read_file", "committed", 0, 0, 1000, 900, 0, "2026-01-02T00:00:00+00:00", "2026-01-02T00:00:01+00:00", "2026-01-02T00:00:02+00:00", "2026-01-02T00:00:02+00:00"),
-        ("s1", "c2", "t0", "exec", "committed", 0, 0, 500, 100, 0, "2026-01-02T00:00:00+00:00", "2026-01-02T00:00:01+00:00", "2026-01-02T00:00:02+00:00", "2026-01-02T00:00:02+00:00"),
-        ("s1", "c3", "t1", "exec", "failed", 1, 1, 50, None, 0, "2026-01-02T00:00:00+00:00", "2026-01-02T00:00:01+00:00", "2026-01-02T00:00:02+00:00", None),
-        ("s1", "c4", "t2", "exec", "indeterminate", 0, None, None, None, 0, "2026-01-02T00:00:00+00:00", "2026-01-02T00:00:03+00:00", None, None),
+        ("s1", "c1", "t0", "read_file", "committed", 0, 0, 1000, 900, 0, "2026-01-02T00:00:00+00:00", "2026-01-02T00:00:01+00:00", "2026-01-02T00:00:02+00:00", "2026-01-02T00:00:02+00:00", "2026-01-02T00:00:01+00:00"),
+        ("s1", "c2", "t0", "exec", "committed", 0, 0, 500, 100, 0, "2026-01-02T00:00:00+00:00", "2026-01-02T00:00:01+00:00", "2026-01-02T00:00:02+00:00", "2026-01-02T00:00:02+00:00", "2026-01-02T00:00:01+00:00"),
+        ("s1", "c3", "t1", "exec", "failed", 1, 1, 50, None, 0, "2026-01-02T00:00:00+00:00", "2026-01-02T00:00:01+00:00", "2026-01-02T00:00:02+00:00", None, None),
+        ("s1", "c4", "t2", "exec", "indeterminate", 0, None, None, None, 0, "2026-01-02T00:00:00+00:00", "2026-01-02T00:00:03+00:00", None, None, "2026-01-02T00:00:01+00:00"),
     ]
-    conn.executemany("INSERT INTO tool_executions VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", tools)
+    conn.executemany("INSERT INTO tool_executions VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", tools)
 
+    # The gate: 3 prompts, 3 resolutions -- 1 single-call approval, 1
+    # session-wide grant, 1 rejection. d6's stale lease is the capability
+    # the agent held and then lost mid-turn.
     conn.executemany(
-        "INSERT INTO security_decisions VALUES (?,?,?,?,?)",
+        "INSERT INTO security_decisions VALUES (?,?,?,?,?,?)",
         [
-            ("d1", "approval_requested", None, "exec", "2026-01-02T00:00:00+00:00"),
-            ("d2", "approval_requested", None, "exec", "2026-01-02T00:00:00+00:00"),
-            ("d3", "approval_requested", None, "read_file", "2026-01-02T00:00:00+00:00"),
-            ("d4", "approval_resolved", "approved", "exec", "2026-01-02T00:00:00+00:00"),
-            ("d5", "approval_resolved", "approved", "exec", "2026-01-02T00:00:00+00:00"),
-            ("d6", "approval_resolved", "rejected", "read_file", "2026-01-02T00:00:00+00:00"),
+            ("d1", "approval_requested", None, "exec", "2026-01-02T00:00:00+00:00", "s1"),
+            ("d2", "approval_requested", None, "exec", "2026-01-02T00:00:00+00:00", "s1"),
+            ("d3", "approval_requested", None, "read_file", "2026-01-02T00:00:00+00:00", "s1"),
+            ("d4", "approval_resolved", "approved", "exec", "2026-01-02T00:00:00+00:00", "s1"),
+            ("d5", "approval_resolved", "approved_session", "exec", "2026-01-02T00:00:00+00:00", "s1"),
+            ("d6", "approval_resolved", "rejected", "read_file", "2026-01-02T00:00:00+00:00", "s1"),
+            ("d7", "capability_stale", None, "exec", "2026-01-02T00:00:00+00:00", "s1"),
         ],
     )
 
@@ -149,12 +155,21 @@ def build_db(path: Path) -> None:
         ],
     )
 
+    # 6 tool_approved vs 3 approval_requested = 2.0 executions per human
+    # decision. e10 is the stale-lease rejection behind d7.
     conn.executemany(
         "INSERT INTO telemetry_events VALUES (?,?,?,?)",
         [
             ("e1", "tool_indeterminate", "info", "2026-01-02T00:00:00+00:00"),
             ("e2", "session_grant_created", "info", "2026-01-02T00:00:00+00:00"),
             ("e3", "boom", "error", "2026-01-02T00:00:00+00:00"),
+            ("e4", "tool_approved", "info", "2026-01-02T00:00:00+00:00"),
+            ("e5", "tool_approved", "info", "2026-01-02T00:00:00+00:00"),
+            ("e6", "tool_approved", "info", "2026-01-02T00:00:00+00:00"),
+            ("e7", "tool_approved", "info", "2026-01-02T00:00:00+00:00"),
+            ("e8", "tool_approved", "info", "2026-01-02T00:00:00+00:00"),
+            ("e9", "tool_approved", "info", "2026-01-02T00:00:00+00:00"),
+            ("e10", "capability_rejected_stale", "warn", "2026-01-02T00:00:00+00:00"),
         ],
     )
     conn.commit()
@@ -165,7 +180,7 @@ def build_tool_db(path: Path, rows: list[tuple]) -> None:
     """Build a DB containing only tool_executions rows."""
     conn = sqlite3.connect(path)
     conn.executescript(SCHEMA)
-    conn.executemany("INSERT INTO tool_executions VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows)
+    conn.executemany("INSERT INTO tool_executions VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows)
     conn.commit()
     conn.close()
 
@@ -401,8 +416,8 @@ class ToolLifecycleEdgeTests(unittest.TestCase):
         # elapsed time and must still count toward the lifecycle.
         tools = self._collect(
             [
-                ("sx", "e1", "tx", "exec", "committed", 0, 0, 300, 250, 0, self.TS, self.TS, self.TS, self.TS),
-                ("sx", "e2", "tx", "exec", "prepared", 0, None, None, 400, 0, self.TS, None, None, None),
+                ("sx", "e1", "tx", "exec", "committed", 0, 0, 300, 250, 0, self.TS, self.TS, self.TS, self.TS, self.TS),
+                ("sx", "e2", "tx", "exec", "prepared", 0, None, None, 400, 0, self.TS, None, None, None, None),
             ]
         )
         self.assertEqual(tools["orphan_waits"], 1)
@@ -416,7 +431,7 @@ class ToolLifecycleEdgeTests(unittest.TestCase):
         # negative "exec" time.
         tools = self._collect(
             [
-                ("sx", "e3", "tx", "exec", "committed", 0, 0, 100, 500, 0, self.TS, None, self.TS, None),
+                ("sx", "e3", "tx", "exec", "committed", 0, 0, 100, 500, 0, self.TS, None, self.TS, None, self.TS),
             ]
         )
         self.assertEqual(tools["inconsistent_timing"], 1)
@@ -426,12 +441,154 @@ class ToolLifecycleEdgeTests(unittest.TestCase):
     def test_approval_tax_never_double_counts_the_wait(self):
         tools = self._collect(
             [
-                ("sx", "e1", "tx", "exec", "committed", 0, 0, 1000, 1000, 0, self.TS, self.TS, self.TS, self.TS),
+                ("sx", "e1", "tx", "exec", "committed", 0, 0, 1000, 1000, 0, self.TS, self.TS, self.TS, self.TS, self.TS),
             ]
         )
         # Entirely wait: the old `wait/(wait+duration)` formula would have
         # reported 50% here.
         self.assertAlmostEqual(tools["approval_tax"], 1.0)
+
+
+class SecurityTests(unittest.TestCase):
+    """How much a single human "yes" buys.
+
+    Denial counts are the easy number and they are not the interesting one: a
+    gate that prompts per call and a gate that prompts once and then
+    auto-allows the session can report identical denials. These metrics are the
+    difference between the two.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls._tmp = tempfile.TemporaryDirectory()
+        cls.db_path = Path(cls._tmp.name) / "telemetry.db"
+        build_db(cls.db_path)
+        cls.snap = open_snapshot(cls.db_path, Window.from_args(since="2026-01-01"))
+        cls.report = collect(cls.snap)
+        cls.findings = derive_insights(cls.report)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.snap.close()
+        cls._tmp.cleanup()
+
+    def _titles(self):
+        return [f["title"] for f in self.findings]
+
+    def test_gate_metrics(self):
+        sec = self.report["security"]
+        self.assertEqual(sec["approval_prompts"], 3)
+        self.assertEqual(sec["resolved"], 3)
+        self.assertEqual(sec["approved_single"], 1)
+        self.assertEqual(sec["approved_session"], 1)
+        self.assertAlmostEqual(sec["session_grant_share"], 1 / 3)
+        self.assertEqual(sec["sessions_with_session_grants"], 1)
+
+    def test_amplification_counts_executions_per_human_decision(self):
+        sec = self.report["security"]
+        self.assertEqual(sec["auto_allowed_executions"], 6)
+        self.assertAlmostEqual(sec["approval_amplification"], 2.0)
+
+    def test_ungated_guarded_execution_is_counted(self):
+        sec = self.report["security"]
+        # c3 is an `exec` with no approved_at; c1/c2/c4 carry the stamp.
+        self.assertEqual(sec["guarded_ungated_executions"], 1)
+        self.assertEqual(sec["ungated_executions"], 1)
+        self.assertEqual(sec["ungated_by_tool"], {"exec": 1})
+
+    def test_flags_session_wide_approvals(self):
+        self.assertIn("approvals are granted session-wide, not per call", self._titles())
+
+    def test_flags_approval_amplification(self):
+        finding = next(
+            f for f in self.findings if f["title"] == "one human approval covers many executions"
+        )
+        self.assertEqual(finding["severity"], "warn")
+        self.assertAlmostEqual(finding["evidence"]["amplification"], 2.0)
+
+    def test_flags_guarded_execution_without_approval(self):
+        self.assertIn("guarded tools executed without an approval record", self._titles())
+
+    def test_flags_stale_capability(self):
+        self.assertIn("capability leases go stale while in use", self._titles())
+
+
+class IntegrityTests(unittest.TestCase):
+    """Rows the readers cannot parse.
+
+    These are checked against mutations of the fixture rather than baked into
+    it, so the shared fixture stays valid for every other metric.
+    """
+
+    def _collect(self, mutate=None, window=None):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        db = Path(tmp.name) / "telemetry.db"
+        build_db(db)
+        if mutate is not None:
+            conn = sqlite3.connect(db)
+            try:
+                mutate(conn)
+                conn.commit()
+            finally:
+                conn.close()
+        snap = open_snapshot(db, window or Window())
+        self.addCleanup(snap.close)
+        return collect(snap)
+
+    def test_clean_projection_reports_no_violations(self):
+        integ = self._collect()["integrity"]
+        self.assertEqual(integ["null_violations"], 0)
+        self.assertEqual(integ["orphan_model_attempts"], 0)
+        self.assertEqual(integ["violating_columns"], [])
+
+    def test_detects_null_provider(self):
+        integ = self._collect(
+            lambda c: c.execute("UPDATE model_attempts SET provider = NULL WHERE attempt_id = 'a3'")
+        )["integrity"]
+        self.assertEqual(integ["null_violations"], 1)
+        self.assertEqual(integ["violating_columns"], ["model_attempts.provider"])
+
+    def test_null_projection_columns_are_critical(self):
+        report = self._collect(
+            lambda c: c.execute(
+                "UPDATE model_attempts SET provider = NULL, model = NULL WHERE attempt_id = 'a3'"
+            )
+        )
+        finding = next(
+            f
+            for f in derive_insights(report)
+            if f["title"] == "projection rows the readers cannot parse"
+        )
+        self.assertEqual(finding["severity"], "critical")
+        self.assertEqual(finding["evidence"]["count"], 2)
+        self.assertEqual(
+            finding["evidence"]["columns"],
+            ["model_attempts.provider", "model_attempts.model"],
+        )
+
+    def test_integrity_is_not_scoped_to_the_window(self):
+        # A malformed row written before the reporting window still breaks the
+        # reader, so the check must not be windowed away. The row inserted here
+        # is deliberately outside the window: the windowed metric must not see
+        # it, the integrity check must.
+        def mutate(conn):
+            conn.execute(
+                "INSERT INTO model_attempts VALUES "
+                "('old_null', NULL, NULL, 'error', 'api_error', 10, NULL, 1, NULL, NULL, NULL, "
+                "NULL, NULL, NULL, '2025-01-01T00:00:00+00:00', '2025-01-01T00:00:01+00:00', "
+                "'old', NULL)"
+            )
+
+        report = self._collect(mutate, window=Window.from_args(since="2026-01-01"))
+        # The 2025 attempt is outside the window...
+        self.assertEqual(report["model_usage"]["totals"]["calls"], 4)
+        # ...but its NULLs are still reported.
+        self.assertEqual(report["integrity"]["null_violations"], 2)
+        self.assertEqual(
+            report["integrity"]["violating_columns"],
+            ["model_attempts.provider", "model_attempts.model"],
+        )
 
 
 class ReadOnlyTests(unittest.TestCase):

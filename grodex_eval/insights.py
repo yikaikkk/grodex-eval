@@ -11,6 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .metrics import GUARDED_TOOLS
+
 SEVERITY_ORDER = {"critical": 0, "warn": 1, "info": 2}
 
 
@@ -30,6 +32,18 @@ class Thresholds:
     compactions_per_100_turns: float = 20.0
     cache_hit_rate_floor: float = 0.20
     http_4xx_share: float = 0.005
+
+    # A gate that answers one prompt and then auto-allows the rest of the
+    # session is a different risk than one that prompts per call, even at
+    # identical denial counts. One in five is already enough to change the
+    # character of the gate.
+    session_grant_share: float = 0.20
+    # One human decision propagating to more than a couple of executions means
+    # the human is no longer the unit of review.
+    approval_amplification: float = 2.0
+    # Below this many resolutions a share is noise: one session-wide grant out
+    # of one resolution reads as 100%.
+    security_min_samples: int = 3
 
 
 def _pct(value: float | None) -> str:
@@ -55,6 +69,8 @@ def derive_insights(report: dict[str, Any], thresholds: Thresholds | None = None
     memory = report.get("memory", {})
     reliability = report.get("reliability", {})
     capabilities = report.get("capabilities", {})
+    security = report.get("security", {})
+    integrity = report.get("integrity", {})
 
     # -- coverage -----------------------------------------------------------
     missing = meta.get("missing_tables") or []
@@ -285,6 +301,84 @@ def derive_insights(report: dict[str, Any], thresholds: Thresholds | None = None
             f"subagent_runs holds {capabilities.get('subagent_runs')} rows. Either the projection "
             "never records subagent lifecycle, or delegated runs are being dropped.",
             gap=gap,
+        )
+
+    # -- security -----------------------------------------------------------
+    # Denial counts say whether the gate said no. These say how much a single
+    # "yes" buys, which is the part that does not show up in a denial count.
+    share = security.get("session_grant_share")
+    resolved = security.get("resolved") or 0
+    if share is not None and share >= t.session_grant_share and resolved >= t.security_min_samples:
+        add(
+            "warn",
+            "approvals are granted session-wide, not per call",
+            f"{security.get('approved_session')}/{resolved} resolved approvals granted the whole "
+            f"session ({_pct(share)}). A session-wide grant answers one prompt and then "
+            "auto-allows later calls of that kind, so the per-action review the gate exists "
+            "to provide happens once instead of on every action.",
+            rate=share,
+            threshold=t.session_grant_share,
+            approved_session=security.get("approved_session"),
+            approved_single=security.get("approved_single"),
+            resolved=resolved,
+            sessions_with_grants=security.get("sessions_with_session_grants"),
+        )
+    amplification = security.get("approval_amplification")
+    if amplification is not None and amplification >= t.approval_amplification:
+        add(
+            "warn",
+            "one human approval covers many executions",
+            f"{security.get('auto_allowed_executions')} tool executions were auto-allowed against "
+            f"{security.get('approval_prompts')} approval prompts ({amplification:.2f} executions "
+            "per human decision). That ratio is the gate's blast radius: one click propagates to "
+            "that many actions, and none of them carries its own review.",
+            amplification=amplification,
+            threshold=t.approval_amplification,
+            auto_allowed=security.get("auto_allowed_executions"),
+            prompts=security.get("approval_prompts"),
+            leases_issued=security.get("leases_issued"),
+            leases_consumed=security.get("leases_consumed"),
+        )
+    if (security.get("guarded_ungated_executions") or 0) > 0:
+        add(
+            "warn",
+            "guarded tools executed without an approval record",
+            f"{security['guarded_ungated_executions']} executions of state-changing tools carry "
+            f"no approval stamp ({security.get('ungated_by_tool')}). Either the gate let them "
+            "through without recording a decision, or the decision is missing from the "
+            "projection — both leave the audit trail unable to answer who allowed this.",
+            count=security["guarded_ungated_executions"],
+            by_tool=security.get("ungated_by_tool"),
+            guarded_tools=list(GUARDED_TOOLS),
+        )
+    if (security.get("capability_stale") or 0) > 0 or (security.get("stale_capability_rejections") or 0) > 0:
+        add(
+            "info",
+            "capability leases go stale while in use",
+            f"{security.get('capability_stale')} capability decisions were stale or evicted and "
+            f"{security.get('stale_capability_rejections')} execution attempts were rejected for "
+            "it. The gate held, but a lease that expires mid-turn means the agent can lose an "
+            "already-granted capability between planning a call and making it.",
+            capability_stale=security.get("capability_stale"),
+            stale_rejections=security.get("stale_capability_rejections"),
+            leases_issued=security.get("leases_issued"),
+            leases_consumed=security.get("leases_consumed"),
+        )
+
+    # -- projection integrity ----------------------------------------------
+    # Not a metric, a crash source: the desktop drill-down declares these
+    # columns non-nullable and raises on a NULL row.
+    if (integrity.get("null_violations") or 0) > 0:
+        add(
+            "critical",
+            "projection rows the readers cannot parse",
+            f"{integrity['null_violations']} rows hold NULL in a column the telemetry readers "
+            f"declare non-nullable ({integrity.get('violating_columns')}). Reading such a row "
+            "raises Invalid column type Null and takes down the surface that reads it — this is "
+            "exactly how the per-turn drill-down breaks.",
+            count=integrity["null_violations"],
+            columns=integrity.get("violating_columns"),
+            checks=integrity.get("null_checks"),
         )
 
     findings.sort(key=lambda f: (SEVERITY_ORDER.get(f["severity"], 9), f["title"]))

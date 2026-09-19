@@ -19,6 +19,17 @@ from .stats import count_by, rate, summarize
 # Tool statuses that mean "this call did not produce a usable result".
 TOOL_ERROR_STATUSES = ("failed", "indeterminate")
 
+# Tools whose execution changes state outside the workspace or spends budget.
+# The security section uses this list to separate "the gate was never stamped"
+# from "the tool never needed the gate".
+GUARDED_TOOLS: tuple[str, ...] = (
+    "exec",
+    "write_file",
+    "edit_file",
+    "apply_patch",
+    "delegate_task",
+)
+
 
 def collect(snap: Snapshot, prices: dict | None = None) -> dict[str, Any]:
     """Run every metric section, isolating failures per section."""
@@ -33,6 +44,8 @@ def collect(snap: Snapshot, prices: dict | None = None) -> dict[str, Any]:
         ("memory", memory),
         ("reliability", reliability),
         ("capabilities", capabilities),
+        ("security", security),
+        ("integrity", integrity),
     ]
     report: dict[str, Any] = {}
     for name, fn in sections:
@@ -436,6 +449,94 @@ def approvals(snap: Snapshot) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# security / authorization surface
+# ---------------------------------------------------------------------------
+
+
+def security(snap: Snapshot) -> dict[str, Any]:
+    """Authorization volume, and how far one human decision propagates.
+
+    The question that matters about an agent's gate is not "did it deny
+    anything" — a gate that denies nothing may be well-tuned, or may simply
+    never have been asked. It is "how much does one approval buy": a gate that
+    prompts per call carries a different risk from one that prompts once and
+    then auto-allows everything of that kind afterwards, even at identical
+    denial counts.
+    """
+    decision_types = {
+        k[0]: v for k, v in snap.group_counts("security_decisions", "decision_type").items()
+    }
+    resolutions = {
+        (k[0] or "-"): v
+        for k, v in snap.group_counts(
+            "security_decisions", "decision", extra=["decision_type = 'approval_resolved'"]
+        ).items()
+    }
+    approved_single = resolutions.get("approved", 0)
+    approved_session = resolutions.get("approved_session", 0)
+    rejected = resolutions.get("rejected", 0)
+    expired = resolutions.get("expired", 0)
+    resolved_total = sum(resolutions.values())
+
+    prompts = decision_types.get("approval_requested", 0)
+    # Executions the gate let through without raising a fresh prompt.
+    auto_allowed = snap.count("telemetry_events", extra=["kind = 'tool_approved'"])
+
+    # How many sessions hold at least one session-wide grant. Guarded on the
+    # column so a trimmed fixture degrades instead of raising.
+    sessions_with_grants = None
+    if "session_id" in snap.columns("security_decisions"):
+        sessions_with_grants = int(
+            snap.scalar(
+                "SELECT COUNT(DISTINCT session_id) FROM security_decisions "
+                "WHERE decision_type = 'approval_resolved' "
+                "AND decision = 'approved_session' AND session_id IS NOT NULL"
+            )
+            or 0
+        )
+
+    # Executions carrying no approval stamp: the gate recorded no decision.
+    ungated: dict[str, int] = {}
+    if "approved_at" in snap.columns("tool_executions"):
+        for r in snap.rows(
+            "SELECT tool_name, COUNT(*) AS n FROM tool_executions "
+            "WHERE approved_at IS NULL GROUP BY tool_name"
+        ):
+            ungated[str(r["tool_name"] or "-")] = int(r["n"])
+
+    return {
+        "decision_types": decision_types,
+        "resolutions": resolutions,
+        "approval_prompts": prompts,
+        "resolved": resolved_total,
+        "approved": approved_single + approved_session,
+        "approved_single": approved_single,
+        "approved_session": approved_session,
+        "rejected": rejected,
+        "expired": expired,
+        "rejection_rate": rate(rejected, resolved_total),
+        # Share of resolutions that granted the whole session rather than the
+        # single call under review.
+        "session_grant_share": rate(approved_session, resolved_total),
+        "sessions_with_session_grants": sessions_with_grants,
+        # One human decision -> this many executions that saw no human.
+        "auto_allowed_executions": auto_allowed,
+        "approval_amplification": rate(auto_allowed, prompts),
+        "leases_issued": decision_types.get("lease_issued", 0),
+        "leases_consumed": decision_types.get("lease_consumed", 0),
+        "capability_stale": decision_types.get("capability_stale", 0),
+        "stale_capability_rejections": snap.count(
+            "telemetry_events", extra=["kind = 'capability_rejected_stale'"]
+        ),
+        "ungated_executions": sum(ungated.values()),
+        "guarded_ungated_executions": sum(
+            n for tool, n in ungated.items() if tool in GUARDED_TOOLS
+        ),
+        "ungated_by_tool": dict(sorted(ungated.items(), key=lambda kv: -kv[1])[:10]),
+    }
+
+
+# ---------------------------------------------------------------------------
 # context: prompt size + compaction
 # ---------------------------------------------------------------------------
 
@@ -623,6 +724,65 @@ def capabilities(snap: Snapshot) -> dict[str, Any]:
         "skills": dict(list(skills.items())[:15]),
         "mcp_events": len(mcp_rows),
         "mcp_servers": mcp_servers,
+    }
+
+
+# ---------------------------------------------------------------------------
+# projection integrity — "will a reader choke on this row"
+# ---------------------------------------------------------------------------
+
+# Columns the projection's own readers declare non-nullable. A NULL here does
+# not skew a metric, it raises `Invalid column type Null` and takes down the
+# surface that reads it — observed in the wild as the desktop per-turn
+# drill-down dying on `model_attempts.provider`.
+#
+# Checked deliberately UNWINDOWED: a malformed row is a property of the
+# database, not of the reporting window. Scoping this to a window would hide
+# exactly the rows written before it, which are the ones already breaking the
+# reader.
+REQUIRED_COLUMNS: tuple[tuple[str, str], ...] = (
+    ("model_attempts", "provider"),
+    ("model_attempts", "model"),
+    ("turns", "turn_id"),
+    ("turns", "session_id"),
+)
+
+
+def integrity(snap: Snapshot) -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+    violations = 0
+    for table, column in REQUIRED_COLUMNS:
+        if not snap.has_table(table) or column not in snap.columns(table):
+            checks.append(
+                {
+                    "table": table,
+                    "column": column,
+                    "nulls": None,
+                    "note": "column absent from projection",
+                }
+            )
+            continue
+        nulls = int(snap.scalar(f"SELECT COUNT(*) FROM {table} WHERE {column} IS NULL") or 0)
+        violations += nulls
+        checks.append({"table": table, "column": column, "nulls": nulls})
+
+    # A model attempt whose turn is gone is unreadable in the other direction:
+    # the drill-down joins on turn_id and would silently drop it.
+    orphans = None
+    if snap.has_table("model_attempts") and "turn_id" in snap.columns("model_attempts"):
+        orphans = int(
+            snap.scalar(
+                "SELECT COUNT(*) FROM model_attempts a WHERE a.turn_id IS NOT NULL "
+                "AND NOT EXISTS (SELECT 1 FROM turns t WHERE t.turn_id = a.turn_id)"
+            )
+            or 0
+        )
+
+    return {
+        "null_violations": violations,
+        "null_checks": checks,
+        "violating_columns": [f"{c['table']}.{c['column']}" for c in checks if c["nulls"]],
+        "orphan_model_attempts": orphans,
     }
 
 
