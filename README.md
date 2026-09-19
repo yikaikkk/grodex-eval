@@ -106,7 +106,7 @@ grodex_eval/
 ├── report.py     Markdown + console rendering
 └── cli.py        argument parsing and output wiring
 tests/            synthetic-DB tests (unittest)
-reports/          generated artifacts (baseline.md / baseline.json)
+reports/          generated artifacts, gitignored (baseline.md / baseline.json)
 ```
 
 ## Upstream defects found by this harness

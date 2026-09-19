@@ -3,3 +3,9 @@ __pycache__/
 .venv/
 .pytest_cache/
 .DS_Store
+
+# Generated artifacts. The input (telemetry.db) is written by a live agent, so
+# these are point-in-time snapshots nobody can regenerate or verify. Keep them
+# out of the tree; pin a window with --since/--until and name the file after it
+# if you want a comparable record.
+reports/
