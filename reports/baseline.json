@@ -1,0 +1,1275 @@
+{
+  "meta": {
+    "db_path": "/Users/zhengguilin/.grodex/telemetry.db",
+    "db_bytes": 28798976,
+    "generated_at": "2026-09-19T13:55:34.129305+00:00",
+    "window": "all time",
+    "window_since": null,
+    "window_until": null,
+    "row_counts": {
+      "sessions": 28,
+      "turns": 253,
+      "model_attempts": 1016,
+      "tool_executions": 987,
+      "security_decisions": 2102,
+      "prompt_builds": 1015,
+      "compactions": 23,
+      "subagent_runs": 0,
+      "skill_activations": 89,
+      "memory_retrievals": 253,
+      "mcp_lifecycle": 0,
+      "telemetry_events": 13477
+    },
+    "missing_tables": []
+  },
+  "overview": {
+    "sessions": 28,
+    "turns": 253,
+    "events": 13482,
+    "turns_per_session": 9.035714285714286,
+    "models": [
+      {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "calls": 1015
+      },
+      {
+        "provider": null,
+        "model": null,
+        "calls": 1
+      }
+    ],
+    "first_session_at": "2026-08-30T13:39:48.056673+00:00",
+    "last_activity_at": "2026-09-19T13:55:33.979667+00:00"
+  },
+  "turn_health": {
+    "turns": 253,
+    "status": {
+      "cancelled": 32,
+      "completed": 214,
+      "running": 7
+    },
+    "termination_reasons": {
+      "-": 7,
+      "cancelled": 32,
+      "final_answer": 95,
+      "repair_exhausted": 95,
+      "sampling_error": 23,
+      "step_budget_exhausted": 1
+    },
+    "final_answer_rate": 0.37549407114624506,
+    "repair_exhausted_rate": 0.37549407114624506,
+    "sampling_error_rate": 0.09090909090909091,
+    "cancel_rate": 0.12648221343873517,
+    "completed_rate": 0.8458498023715415,
+    "still_running": 7,
+    "duration_ms": {
+      "count": 214,
+      "enough": true,
+      "mean": 37379.957943925234,
+      "min": 813.0,
+      "p50": 14561.5,
+      "p90": 109458.30000000003,
+      "p95": 149566.94999999995,
+      "p99": 235437.19,
+      "max": 258342.0,
+      "sum": 7999311.0
+    },
+    "steps_per_turn": {
+      "count": 214,
+      "enough": true,
+      "mean": 4.079439252336448,
+      "min": 1.0,
+      "p50": 3.0,
+      "p90": 9.0,
+      "p95": 12.0,
+      "p99": 22.74000000000001,
+      "max": 40.0,
+      "sum": 873.0
+    },
+    "model_calls_per_turn": {
+      "count": 214,
+      "enough": true,
+      "mean": 4.079439252336448,
+      "min": 1.0,
+      "p50": 3.0,
+      "p90": 9.0,
+      "p95": 12.0,
+      "p99": 22.74000000000001,
+      "max": 40.0,
+      "sum": 873.0
+    },
+    "tool_calls_per_turn": {
+      "count": 214,
+      "enough": true,
+      "mean": 3.7383177570093458,
+      "min": 0.0,
+      "p50": 1.0,
+      "p90": 12.0,
+      "p95": 14.349999999999994,
+      "p99": 27.74000000000001,
+      "max": 44.0,
+      "sum": 800.0
+    },
+    "turns_with_compaction": 20,
+    "compaction_turn_rate": 0.07905138339920949
+  },
+  "model_usage": {
+    "models": [
+      {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "calls": 1015,
+        "ok": 979,
+        "error": 23,
+        "running": 13,
+        "error_rate": 0.022954091816367265,
+        "errors": {
+          "api_error": 23
+        },
+        "errors_by_http_status": {
+          "400": 23
+        },
+        "ttft_ms": {
+          "count": 979,
+          "enough": true,
+          "mean": 832.385086823289,
+          "min": 212.0,
+          "p50": 747.0,
+          "p90": 1206.4,
+          "p95": 1432.7999999999984,
+          "p99": 2965.6200000000044,
+          "max": 5741.0,
+          "sum": 814905.0
+        },
+        "duration_ms": {
+          "count": 1002,
+          "enough": true,
+          "mean": 6756.804391217564,
+          "min": 64.0,
+          "p50": 4108.0,
+          "p90": 15905.899999999998,
+          "p95": 20776.05,
+          "p99": 34214.87,
+          "max": 50557.0,
+          "sum": 6770318.0
+        },
+        "cache_hit_rate": 0.9209479464841448,
+        "calls_needing_retry": 0,
+        "max_attempts": 1,
+        "tokens": {
+          "input": 53214734,
+          "cached_input": 49008000,
+          "cache_creation": 0,
+          "output": 940357,
+          "reasoning": 595540,
+          "total": 54155091
+        }
+      },
+      {
+        "provider": "-",
+        "model": "-",
+        "calls": 1,
+        "ok": 1,
+        "error": 0,
+        "running": 0,
+        "error_rate": 0.0,
+        "errors": {},
+        "errors_by_http_status": {},
+        "ttft_ms": {
+          "count": 1,
+          "enough": false,
+          "mean": 894.0,
+          "min": 894.0,
+          "p50": 894.0,
+          "p90": 894.0,
+          "p95": 894.0,
+          "p99": 894.0,
+          "max": 894.0,
+          "sum": 894.0
+        },
+        "duration_ms": {
+          "count": 1,
+          "enough": false,
+          "mean": 4173.0,
+          "min": 4173.0,
+          "p50": 4173.0,
+          "p90": 4173.0,
+          "p95": 4173.0,
+          "p99": 4173.0,
+          "max": 4173.0,
+          "sum": 4173.0
+        },
+        "cache_hit_rate": 0.012405024034734067,
+        "calls_needing_retry": 0,
+        "max_attempts": 1,
+        "tokens": {
+          "input": 51592,
+          "cached_input": 640,
+          "cache_creation": 0,
+          "output": 774,
+          "reasoning": 389,
+          "total": 52366
+        }
+      }
+    ],
+    "totals": {
+      "calls": 1016,
+      "finished": 1003,
+      "error": 23,
+      "input": 53266326,
+      "cached_input": 49008640,
+      "output": 941131,
+      "reasoning": 595929,
+      "total": 54207457,
+      "error_rate": 0.022931206380857428,
+      "cache_hit_rate": 0.9200679618864647
+    }
+  },
+  "tool_usage": {
+    "calls": 988,
+    "errors": 25,
+    "error_rate": 0.025303643724696356,
+    "status": {
+      "committed": 969,
+      "failed": 6,
+      "succeeded": 4,
+      "indeterminate": 3,
+      "prepared": 3,
+      "running": 3
+    },
+    "tools": [
+      {
+        "tool": "exec",
+        "calls": 514,
+        "errors": 7,
+        "error_rate": 0.013618677042801557,
+        "duration_ms": {
+          "count": 0,
+          "mean": null,
+          "min": null,
+          "p50": null,
+          "p90": null,
+          "p95": null,
+          "p99": null,
+          "max": null,
+          "sum": null,
+          "enough": false
+        },
+        "pure_exec_ms": {
+          "count": 504,
+          "enough": true,
+          "mean": 602.2440476190476,
+          "min": 9.0,
+          "p50": 94.0,
+          "p90": 587.0999999999999,
+          "p95": 1929.1,
+          "p99": 8281.639999999985,
+          "max": 50509.0,
+          "sum": 303531.0
+        },
+        "lifecycle_ms": 1319207.0,
+        "approval_wait_ms": {
+          "count": 201,
+          "enough": true,
+          "mean": 5053.114427860696,
+          "min": 430.0,
+          "p50": 1879.0,
+          "p90": 7735.0,
+          "p95": 14404.0,
+          "p99": 75660.0,
+          "max": 116474.0,
+          "sum": 1015676.0
+        },
+        "approvals_required": 201,
+        "orphan_waits": 4,
+        "inconsistent_timing": 0,
+        "truncated": 0,
+        "status": {
+          "committed": 504,
+          "failed": 3,
+          "indeterminate": 3,
+          "running": 2,
+          "succeeded": 2
+        }
+      },
+      {
+        "tool": "read_file",
+        "calls": 229,
+        "errors": 2,
+        "error_rate": 0.008733624454148471,
+        "duration_ms": {
+          "count": 0,
+          "mean": null,
+          "min": null,
+          "p50": null,
+          "p90": null,
+          "p95": null,
+          "p99": null,
+          "max": null,
+          "sum": null,
+          "enough": false
+        },
+        "pure_exec_ms": {
+          "count": 227,
+          "enough": true,
+          "mean": 26.229074889867842,
+          "min": 0.0,
+          "p50": 26.0,
+          "p90": 39.0,
+          "p95": 42.69999999999999,
+          "p99": 53.22000000000003,
+          "max": 67.0,
+          "sum": 5954.0
+        },
+        "lifecycle_ms": 537936.0,
+        "approval_wait_ms": {
+          "count": 71,
+          "enough": true,
+          "mean": 7524.549295774648,
+          "min": 381.0,
+          "p50": 2270.0,
+          "p90": 7431.0,
+          "p95": 12268.0,
+          "p99": 112327.49999999996,
+          "max": 122271.0,
+          "sum": 534243.0
+        },
+        "approvals_required": 71,
+        "orphan_waits": 2,
+        "inconsistent_timing": 1,
+        "truncated": 0,
+        "status": {
+          "committed": 229
+        }
+      },
+      {
+        "tool": "grep",
+        "calls": 110,
+        "errors": 2,
+        "error_rate": 0.01818181818181818,
+        "duration_ms": {
+          "count": 0,
+          "mean": null,
+          "min": null,
+          "p50": null,
+          "p90": null,
+          "p95": null,
+          "p99": null,
+          "max": null,
+          "sum": null,
+          "enough": false
+        },
+        "pure_exec_ms": {
+          "count": 109,
+          "enough": true,
+          "mean": 67.28440366972477,
+          "min": 13.0,
+          "p50": 34.0,
+          "p90": 172.8,
+          "p95": 202.0,
+          "p99": 252.36000000000007,
+          "max": 421.0,
+          "sum": 7334.0
+        },
+        "lifecycle_ms": 194609.0,
+        "approval_wait_ms": {
+          "count": 33,
+          "enough": true,
+          "mean": 5675.0,
+          "min": 468.0,
+          "p50": 3325.0,
+          "p90": 15857.800000000003,
+          "p95": 18220.999999999996,
+          "p99": 20432.28,
+          "max": 20839.0,
+          "sum": 187275.0
+        },
+        "approvals_required": 33,
+        "orphan_waits": 1,
+        "inconsistent_timing": 0,
+        "truncated": 0,
+        "status": {
+          "committed": 109,
+          "running": 1
+        }
+      },
+      {
+        "tool": "edit_file",
+        "calls": 35,
+        "errors": 2,
+        "error_rate": 0.05714285714285714,
+        "duration_ms": {
+          "count": 0,
+          "mean": null,
+          "min": null,
+          "p50": null,
+          "p90": null,
+          "p95": null,
+          "p99": null,
+          "max": null,
+          "sum": null,
+          "enough": false
+        },
+        "pure_exec_ms": {
+          "count": 35,
+          "enough": true,
+          "mean": 23.714285714285715,
+          "min": 14.0,
+          "p50": 22.0,
+          "p90": 29.800000000000004,
+          "p95": 38.19999999999999,
+          "p99": 48.25999999999996,
+          "max": 52.0,
+          "sum": 830.0
+        },
+        "lifecycle_ms": 111890.0,
+        "approval_wait_ms": {
+          "count": 4,
+          "enough": true,
+          "mean": 27765.0,
+          "min": 1426.0,
+          "p50": 22981.5,
+          "p90": 56330.90000000001,
+          "p95": 60000.94999999999,
+          "p99": 62936.98999999999,
+          "max": 63671.0,
+          "sum": 111060.0
+        },
+        "approvals_required": 4,
+        "orphan_waits": 0,
+        "inconsistent_timing": 0,
+        "truncated": 0,
+        "status": {
+          "committed": 35
+        }
+      },
+      {
+        "tool": "write_file",
+        "calls": 33,
+        "errors": 3,
+        "error_rate": 0.09090909090909091,
+        "duration_ms": {
+          "count": 0,
+          "mean": null,
+          "min": null,
+          "p50": null,
+          "p90": null,
+          "p95": null,
+          "p99": null,
+          "max": null,
+          "sum": null,
+          "enough": false
+        },
+        "pure_exec_ms": {
+          "count": 33,
+          "enough": true,
+          "mean": 28.515151515151516,
+          "min": 16.0,
+          "p50": 26.0,
+          "p90": 41.8,
+          "p95": 43.4,
+          "p99": 44.68,
+          "max": 45.0,
+          "sum": 941.0
+        },
+        "lifecycle_ms": 65096.0,
+        "approval_wait_ms": {
+          "count": 14,
+          "enough": true,
+          "mean": 4582.5,
+          "min": 1465.0,
+          "p50": 2608.0,
+          "p90": 9392.200000000004,
+          "p95": 13307.249999999996,
+          "p99": 16986.249999999993,
+          "max": 17906.0,
+          "sum": 64155.0
+        },
+        "approvals_required": 14,
+        "orphan_waits": 0,
+        "inconsistent_timing": 0,
+        "truncated": 0,
+        "status": {
+          "committed": 33
+        }
+      },
+      {
+        "tool": "delegate_task",
+        "calls": 28,
+        "errors": 3,
+        "error_rate": 0.10714285714285714,
+        "duration_ms": {
+          "count": 0,
+          "mean": null,
+          "min": null,
+          "p50": null,
+          "p90": null,
+          "p95": null,
+          "p99": null,
+          "max": null,
+          "sum": null,
+          "enough": false
+        },
+        "pure_exec_ms": {
+          "count": 9,
+          "enough": true,
+          "mean": 8049.444444444444,
+          "min": 2905.0,
+          "p50": 7704.0,
+          "p90": 13857.2,
+          "p95": 14973.599999999999,
+          "p99": 15866.72,
+          "max": 16090.0,
+          "sum": 72445.0
+        },
+        "lifecycle_ms": 276738.0,
+        "approval_wait_ms": {
+          "count": 28,
+          "enough": true,
+          "mean": 7296.178571428572,
+          "min": 1008.0,
+          "p50": 2339.0,
+          "p90": 4055.1000000000004,
+          "p95": 6115.849999999996,
+          "p99": 102518.46000000005,
+          "max": 137808.0,
+          "sum": 204293.0
+        },
+        "approvals_required": 28,
+        "orphan_waits": 19,
+        "inconsistent_timing": 0,
+        "truncated": 0,
+        "status": {
+          "committed": 20,
+          "prepared": 3,
+          "failed": 3,
+          "succeeded": 2
+        }
+      },
+      {
+        "tool": "glob",
+        "calls": 18,
+        "errors": 0,
+        "error_rate": 0.0,
+        "duration_ms": {
+          "count": 0,
+          "mean": null,
+          "min": null,
+          "p50": null,
+          "p90": null,
+          "p95": null,
+          "p99": null,
+          "max": null,
+          "sum": null,
+          "enough": false
+        },
+        "pure_exec_ms": {
+          "count": 18,
+          "enough": true,
+          "mean": 41.05555555555556,
+          "min": 24.0,
+          "p50": 34.0,
+          "p90": 69.4,
+          "p95": 75.89999999999999,
+          "p99": 79.97999999999999,
+          "max": 81.0,
+          "sum": 739.0
+        },
+        "lifecycle_ms": 30105.0,
+        "approval_wait_ms": {
+          "count": 16,
+          "enough": true,
+          "mean": 1835.375,
+          "min": 433.0,
+          "p50": 1510.0,
+          "p90": 3126.0,
+          "p95": 4264.0,
+          "p99": 5408.799999999999,
+          "max": 5695.0,
+          "sum": 29366.0
+        },
+        "approvals_required": 16,
+        "orphan_waits": 0,
+        "inconsistent_timing": 0,
+        "truncated": 0,
+        "status": {
+          "committed": 18
+        }
+      },
+      {
+        "tool": "web_fetch",
+        "calls": 15,
+        "errors": 5,
+        "error_rate": 0.3333333333333333,
+        "duration_ms": {
+          "count": 0,
+          "mean": null,
+          "min": null,
+          "p50": null,
+          "p90": null,
+          "p95": null,
+          "p99": null,
+          "max": null,
+          "sum": null,
+          "enough": false
+        },
+        "pure_exec_ms": {
+          "count": 15,
+          "enough": true,
+          "mean": 514.5333333333333,
+          "min": 17.0,
+          "p50": 199.0,
+          "p90": 1180.3999999999999,
+          "p95": 1788.4999999999982,
+          "p99": 2827.2999999999993,
+          "max": 3087.0,
+          "sum": 7718.0
+        },
+        "lifecycle_ms": 9510.0,
+        "approval_wait_ms": {
+          "count": 1,
+          "enough": false,
+          "mean": 1792.0,
+          "min": 1792.0,
+          "p50": 1792.0,
+          "p90": 1792.0,
+          "p95": 1792.0,
+          "p99": 1792.0,
+          "max": 1792.0,
+          "sum": 1792.0
+        },
+        "approvals_required": 1,
+        "orphan_waits": 0,
+        "inconsistent_timing": 0,
+        "truncated": 0,
+        "status": {
+          "committed": 15
+        }
+      },
+      {
+        "tool": "list_agents",
+        "calls": 2,
+        "errors": 0,
+        "error_rate": 0.0,
+        "duration_ms": {
+          "count": 0,
+          "mean": null,
+          "min": null,
+          "p50": null,
+          "p90": null,
+          "p95": null,
+          "p99": null,
+          "max": null,
+          "sum": null,
+          "enough": false
+        },
+        "pure_exec_ms": {
+          "count": 2,
+          "enough": false,
+          "mean": 26.5,
+          "min": 26.0,
+          "p50": 26.5,
+          "p90": 26.9,
+          "p95": 26.95,
+          "p99": 26.99,
+          "max": 27.0,
+          "sum": 53.0
+        },
+        "lifecycle_ms": 6645.0,
+        "approval_wait_ms": {
+          "count": 2,
+          "enough": false,
+          "mean": 3296.0,
+          "min": 3195.0,
+          "p50": 3296.0,
+          "p90": 3376.8,
+          "p95": 3386.9,
+          "p99": 3394.98,
+          "max": 3397.0,
+          "sum": 6592.0
+        },
+        "approvals_required": 2,
+        "orphan_waits": 0,
+        "inconsistent_timing": 0,
+        "truncated": 0,
+        "status": {
+          "committed": 2
+        }
+      },
+      {
+        "tool": "apply_patch",
+        "calls": 2,
+        "errors": 0,
+        "error_rate": 0.0,
+        "duration_ms": {
+          "count": 0,
+          "mean": null,
+          "min": null,
+          "p50": null,
+          "p90": null,
+          "p95": null,
+          "p99": null,
+          "max": null,
+          "sum": null,
+          "enough": false
+        },
+        "pure_exec_ms": {
+          "count": 2,
+          "enough": false,
+          "mean": 34.5,
+          "min": 26.0,
+          "p50": 34.5,
+          "p90": 41.3,
+          "p95": 42.15,
+          "p99": 42.83,
+          "max": 43.0,
+          "sum": 69.0
+        },
+        "lifecycle_ms": 7159.0,
+        "approval_wait_ms": {
+          "count": 1,
+          "enough": false,
+          "mean": 7090.0,
+          "min": 7090.0,
+          "p50": 7090.0,
+          "p90": 7090.0,
+          "p95": 7090.0,
+          "p99": 7090.0,
+          "max": 7090.0,
+          "sum": 7090.0
+        },
+        "approvals_required": 1,
+        "orphan_waits": 0,
+        "inconsistent_timing": 0,
+        "truncated": 0,
+        "status": {
+          "committed": 2
+        }
+      },
+      {
+        "tool": "load_skill",
+        "calls": 1,
+        "errors": 0,
+        "error_rate": 0.0,
+        "duration_ms": {
+          "count": 0,
+          "mean": null,
+          "min": null,
+          "p50": null,
+          "p90": null,
+          "p95": null,
+          "p99": null,
+          "max": null,
+          "sum": null,
+          "enough": false
+        },
+        "pure_exec_ms": {
+          "count": 1,
+          "enough": false,
+          "mean": 25.0,
+          "min": 25.0,
+          "p50": 25.0,
+          "p90": 25.0,
+          "p95": 25.0,
+          "p99": 25.0,
+          "max": 25.0,
+          "sum": 25.0
+        },
+        "lifecycle_ms": 1316.0,
+        "approval_wait_ms": {
+          "count": 1,
+          "enough": false,
+          "mean": 1291.0,
+          "min": 1291.0,
+          "p50": 1291.0,
+          "p90": 1291.0,
+          "p95": 1291.0,
+          "p99": 1291.0,
+          "max": 1291.0,
+          "sum": 1291.0
+        },
+        "approvals_required": 1,
+        "orphan_waits": 0,
+        "inconsistent_timing": 0,
+        "truncated": 0,
+        "status": {
+          "committed": 1
+        }
+      },
+      {
+        "tool": "read_artifact",
+        "calls": 1,
+        "errors": 1,
+        "error_rate": 1.0,
+        "duration_ms": {
+          "count": 0,
+          "mean": null,
+          "min": null,
+          "p50": null,
+          "p90": null,
+          "p95": null,
+          "p99": null,
+          "max": null,
+          "sum": null,
+          "enough": false
+        },
+        "pure_exec_ms": {
+          "count": 1,
+          "enough": false,
+          "mean": 0.0,
+          "min": 0.0,
+          "p50": 0.0,
+          "p90": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "max": 0.0,
+          "sum": 0.0
+        },
+        "lifecycle_ms": 0.0,
+        "approval_wait_ms": {
+          "count": 0,
+          "mean": null,
+          "min": null,
+          "p50": null,
+          "p90": null,
+          "p95": null,
+          "p99": null,
+          "max": null,
+          "sum": null,
+          "enough": false
+        },
+        "approvals_required": 0,
+        "orphan_waits": 0,
+        "inconsistent_timing": 0,
+        "truncated": 0,
+        "status": {
+          "committed": 1
+        }
+      }
+    ],
+    "total_lifecycle_ms": 2560211.0,
+    "total_pure_exec_ms": 399639.0,
+    "total_approval_wait_ms": 2162833.0,
+    "approval_tax": 0.8447870116955204,
+    "truncated_results": 0,
+    "orphan_waits": 26,
+    "inconsistent_timing": 1
+  },
+  "approvals": {
+    "decision_types": {
+      "approval_requested": 372,
+      "approval_resolved": 392,
+      "capability_stale": 1,
+      "lease_consumed": 974,
+      "lease_issued": 364
+    },
+    "resolutions": {
+      "approved": 299,
+      "approved_session": 88,
+      "expired": 1,
+      "rejected": 4
+    },
+    "approval_requests": 372,
+    "resolved": 392,
+    "approved": 387,
+    "rejected": 4,
+    "expired": 1,
+    "narrowed": 0,
+    "rejection_rate": 0.01020408163265306,
+    "unresolved_requests": 0,
+    "requests_per_turn": 1.4703557312252964,
+    "session_grants": 88,
+    "tools_most_approved": {
+      "exec": 201,
+      "read_file": 71,
+      "grep": 33,
+      "delegate_task": 28,
+      "glob": 16,
+      "write_file": 14,
+      "edit_file": 4,
+      "list_agents": 2,
+      "apply_patch": 1,
+      "load_skill": 1
+    },
+    "approval_wait_ms": {
+      "count": 372,
+      "enough": true,
+      "mean": 5814.067204301075,
+      "min": 381.0,
+      "p50": 2131.0,
+      "p90": 8484.900000000014,
+      "p95": 17062.549999999996,
+      "p99": 109657.23000000011,
+      "max": 137808.0,
+      "sum": 2162833.0
+    }
+  },
+  "context": {
+    "prompt_builds": 1015,
+    "prompt_input_tokens": {
+      "count": 1015,
+      "enough": true,
+      "mean": 57662.251231527094,
+      "min": 1.0,
+      "p50": 59077.0,
+      "p90": 97320.8,
+      "p95": 102262.6,
+      "p99": 107236.36,
+      "max": 108730.0,
+      "sum": 58527185.0
+    },
+    "prompt_context_items": {
+      "count": 1015,
+      "enough": true,
+      "mean": 105.09950738916257,
+      "min": 1.0,
+      "p50": 89.0,
+      "p90": 220.20000000000005,
+      "p95": 254.29999999999995,
+      "p99": 323.44000000000005,
+      "max": 357.0,
+      "sum": 106676.0
+    },
+    "compactions": 23,
+    "compaction_triggers": {
+      "token_budget": 23
+    },
+    "compaction_status": {
+      "committed": 22,
+      "started": 1
+    },
+    "compaction_pre_item_count": {
+      "count": 23,
+      "enough": true,
+      "mean": 168.04347826086956,
+      "min": 103.0,
+      "p50": 136.0,
+      "p90": 275.2,
+      "p95": 276.9,
+      "p99": 341.7400000000001,
+      "max": 360.0,
+      "sum": 3865.0
+    },
+    "compactions_per_100_turns": 9.090909090909092,
+    "sessions_with_compaction": 5,
+    "sessions": 28
+  },
+  "memory": {
+    "retrievals": 253,
+    "routers": [
+      {
+        "router_kind": "3way_hybrid_rrf",
+        "count": 220,
+        "empty_results": 207,
+        "empty_rate": 0.9409090909090909,
+        "selected_count": {
+          "count": 220,
+          "enough": true,
+          "mean": 0.17727272727272728,
+          "min": 0.0,
+          "p50": 0.0,
+          "p90": 0.0,
+          "p95": 3.0,
+          "p99": 3.0,
+          "max": 4.0,
+          "sum": 39.0
+        },
+        "duration_ms": {
+          "count": 220,
+          "enough": true,
+          "mean": 1755.5545454545454,
+          "min": 0.0,
+          "p50": 2.0,
+          "p90": 6087.699999999998,
+          "p95": 13667.149999999994,
+          "p99": 20008.62,
+          "max": 20090.0,
+          "sum": 386222.0
+        }
+      },
+      {
+        "router_kind": "hybrid_rrf",
+        "count": 33,
+        "empty_results": 33,
+        "empty_rate": 1.0,
+        "selected_count": {
+          "count": 33,
+          "enough": true,
+          "mean": 0.0,
+          "min": 0.0,
+          "p50": 0.0,
+          "p90": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "max": 0.0,
+          "sum": 0.0
+        },
+        "duration_ms": {
+          "count": 33,
+          "enough": true,
+          "mean": 1.0303030303030303,
+          "min": 0.0,
+          "p50": 0.0,
+          "p90": 2.0,
+          "p95": 2.799999999999997,
+          "p99": 15.559999999999995,
+          "max": 21.0,
+          "sum": 34.0
+        }
+      }
+    ],
+    "empty_results": 240,
+    "empty_rate": 0.9486166007905138,
+    "selected_count": {
+      "count": 253,
+      "enough": true,
+      "mean": 0.1541501976284585,
+      "min": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "p95": 0.39999999999997726,
+      "p99": 3.0,
+      "max": 4.0,
+      "sum": 39.0
+    },
+    "duration_ms": {
+      "count": 253,
+      "enough": true,
+      "mean": 1526.703557312253,
+      "min": 0.0,
+      "p50": 2.0,
+      "p90": 3945.800000000001,
+      "p95": 12071.399999999989,
+      "p99": 20007.96,
+      "max": 20090.0,
+      "sum": 386256.0
+    },
+    "retrievals_per_turn": 1.0
+  },
+  "reliability": {
+    "error_severity_events": 46,
+    "error_events_by_kind": {
+      "tool_finished": 16,
+      "tool_result_committed": 30
+    },
+    "anomalies": {
+      "open_turns": 7,
+      "stuck_tools": 25,
+      "uncommitted_results": 0,
+      "indeterminate_tools": 3
+    },
+    "tool_indeterminate_events": 84,
+    "capability_stale_decisions": 1,
+    "http_4xx_by_status": {
+      "400": 23
+    },
+    "turns_with_http_4xx": 23,
+    "turns_with_http_4xx_killed": 23
+  },
+  "capabilities": {
+    "subagent_runs": 0,
+    "subagent_status": {},
+    "delegate_task_calls": 28,
+    "subagent_projection_gap": 28,
+    "skill_activations": 89,
+    "skills": {
+      "aurora-article-publisher": 89
+    },
+    "mcp_events": 0,
+    "mcp_servers": {}
+  },
+  "cost": {
+    "priced": false,
+    "note": "no price table supplied (--prices); token counts are reported without cost"
+  },
+  "findings": [
+    {
+      "severity": "critical",
+      "title": "indeterminate tool results",
+      "detail": "3 tool executions ended indeterminate — the agent could not decide whether the side effect happened, which is the one state crash recovery must never guess at.",
+      "evidence": {
+        "count": 3,
+        "journal_events": 84
+      }
+    },
+    {
+      "severity": "critical",
+      "title": "provider rejects our requests with HTTP 4xx",
+      "detail": "23/1003 finished model calls (2.3%) were rejected by the provider ({'400': 23}). A 4xx is a request-construction bug, not a transient failure, so retries cannot recover it. 23/23 turns that hit one terminated on sampling_error — the turn dies mid-plan with its tool results already spent.",
+      "evidence": {
+        "count": 23,
+        "rate": 0.022931206380857428,
+        "threshold": 0.005,
+        "by_status": {
+          "400": 23
+        },
+        "by_model": {
+          "deepseek-v4-flash": {
+            "400": 23
+          }
+        },
+        "affected_turns": 23,
+        "killed_turns": 23
+      }
+    },
+    {
+      "severity": "critical",
+      "title": "repair loop exhausts budget on many turns",
+      "detail": "95/253 turns ended with repair_exhausted instead of a final answer. The repair sampling path is a fallback for malformed model output; a rate this high means either the model keeps emitting invalid tool calls, or the repair trigger fires on ordinary question-answering turns.",
+      "evidence": {
+        "rate": 0.37549407114624506,
+        "threshold": 0.1,
+        "turns": 95
+      }
+    },
+    {
+      "severity": "warn",
+      "title": "average prompt is very large",
+      "detail": "Mean estimated input is 57,662 tokens per model call (max 108,730), across 105 context items. Large prompts inflate cost, TTFT, and compaction frequency.",
+      "evidence": {
+        "mean_tokens": 57662.251231527094,
+        "threshold": 50000.0
+      }
+    },
+    {
+      "severity": "warn",
+      "title": "delegated work is missing from the subagent projection",
+      "detail": "delegate_task was called 28 times but subagent_runs holds 0 rows. Either the projection never records subagent lifecycle, or delegated runs are being dropped.",
+      "evidence": {
+        "gap": 28
+      }
+    },
+    {
+      "severity": "warn",
+      "title": "human approval latency dominates tool time",
+      "detail": "84.5% of the tool lifecycle is spent waiting for approval decisions (372 requests). This is a harness/UX cost, not a model cost.",
+      "evidence": {
+        "rate": 0.8447870116955204,
+        "threshold": 0.25,
+        "top_tools": {
+          "exec": 201,
+          "read_file": 71,
+          "grep": 33,
+          "delegate_task": 28,
+          "glob": 16,
+          "write_file": 14,
+          "edit_file": 4,
+          "list_agents": 2,
+          "apply_patch": 1,
+          "load_skill": 1
+        }
+      }
+    },
+    {
+      "severity": "warn",
+      "title": "memory retrieval usually returns nothing",
+      "detail": "240/253 retrievals selected 0 items.",
+      "evidence": {
+        "rate": 0.9486166007905138,
+        "threshold": 0.5
+      }
+    },
+    {
+      "severity": "warn",
+      "title": "model error rate above threshold",
+      "detail": "23/1016 attempts failed.",
+      "evidence": {
+        "rate": 0.022931206380857428,
+        "threshold": 0.02,
+        "error_classes": {
+          "deepseek-v4-flash": {
+            "api_error": 23
+          }
+        }
+      }
+    },
+    {
+      "severity": "warn",
+      "title": "router 'hybrid_rrf' never selects anything",
+      "detail": "33 retrievals via this router returned 0 items every time.",
+      "evidence": {
+        "router": "hybrid_rrf",
+        "count": 33
+      }
+    },
+    {
+      "severity": "warn",
+      "title": "tool executions that started and never finished",
+      "detail": "25 calls are stuck running.",
+      "evidence": {
+        "count": 25
+      }
+    },
+    {
+      "severity": "warn",
+      "title": "tool failure rate above threshold",
+      "detail": "25/988 tool calls failed.",
+      "evidence": {
+        "rate": 0.025303643724696356,
+        "threshold": 0.02,
+        "worst_tools": [
+          {
+            "tool": "read_artifact",
+            "rate": 1.0,
+            "errors": 1
+          },
+          {
+            "tool": "web_fetch",
+            "rate": 0.3333333333333333,
+            "errors": 5
+          },
+          {
+            "tool": "delegate_task",
+            "rate": 0.10714285714285714,
+            "errors": 3
+          },
+          {
+            "tool": "write_file",
+            "rate": 0.09090909090909091,
+            "errors": 3
+          },
+          {
+            "tool": "edit_file",
+            "rate": 0.05714285714285714,
+            "errors": 2
+          }
+        ]
+      }
+    },
+    {
+      "severity": "warn",
+      "title": "turn-level sampling errors",
+      "detail": "23/253 turns terminated on sampling_error.",
+      "evidence": {
+        "rate": 0.09090909090909091,
+        "threshold": 0.02
+      }
+    },
+    {
+      "severity": "info",
+      "title": "approval tickets expired",
+      "detail": "1 approvals expired without a decision.",
+      "evidence": {
+        "count": 1
+      }
+    },
+    {
+      "severity": "info",
+      "title": "high cancellation rate",
+      "detail": "12.6% of turns were cancelled (human-initiated or superseded).",
+      "evidence": {
+        "rate": 0.12648221343873517,
+        "threshold": 0.1
+      }
+    },
+    {
+      "severity": "info",
+      "title": "turns unfinished at snapshot time",
+      "detail": "7 turns are still marked running; if the agent is live this is expected.",
+      "evidence": {
+        "count": 7
+      }
+    }
+  ]
+}
